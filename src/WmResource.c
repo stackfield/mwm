@@ -4435,7 +4435,9 @@ ProcessAppearanceResources (WmScreenData *pSD)
 void 
 MakeAppearanceResources (WmScreenData *pSD, AppearanceData *pAData, Boolean makeActiveResources)
 {
+    Dimension width, height;
     Pixel foreground;
+    XmString xmstring;
 
     /*
      * Extract a font from the font list.
@@ -4456,7 +4458,16 @@ MakeAppearanceResources (WmScreenData *pSD, AppearanceData *pAData, Boolean make
         + WM_TITLE_BAR_PADDING;
 #endif
 
+    xmstring = XmStringCreateLocalized("TEST STRING");
+    XmStringExtent(pAData->renderTable,
+		   xmstring,
+		   &width,
+		   &height);
 
+    pAData->titleHeight = height + WM_TITLE_BAR_PADDING;
+
+    XmStringFree(xmstring);
+    
     /*
      * Make standard (inactive) appearance resources.
      */
