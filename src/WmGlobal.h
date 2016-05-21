@@ -1037,6 +1037,7 @@ typedef struct _RList
 
 typedef struct _AppearanceData
 {
+    XmRenderTable renderTable;
     XmFontList	fontList;			/* resource */
     XFontStruct	*font;
 #ifndef NO_MULTIBYTE
