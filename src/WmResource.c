@@ -4435,7 +4435,6 @@ ProcessAppearanceResources (WmScreenData *pSD)
 void 
 MakeAppearanceResources (WmScreenData *pSD, AppearanceData *pAData, Boolean makeActiveResources)
 {
-    Dimension width, height;
     Pixel foreground;
     XmString xmstring;
 
@@ -4459,13 +4458,8 @@ MakeAppearanceResources (WmScreenData *pSD, AppearanceData *pAData, Boolean make
 #endif
 
     xmstring = XmStringCreateLocalized("TEST STRING");
-    XmStringExtent(pAData->renderTable,
-		   xmstring,
-		   &width,
-		   &height);
-
-    pAData->titleHeight = height + WM_TITLE_BAR_PADDING;
-
+    pAData->titleHeight = (int) XmStringHeight(pAData->renderTable,xmstring)
+                          + WM_TITLE_BAR_PADDING;
     XmStringFree(xmstring);
     
     /*
