@@ -1,31 +1,44 @@
+
+#include <localdef.h>
+
 /* 
- * Motif
- *
- * Copyright (c) 1987-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
+ * @OPENGROUP_COPYRIGHT@
+ * COPYRIGHT NOTICE
+ * Copyright (c) 1989, 1990, 1991, 1992, 1993, 1994 Open Software Foundation, Inc. 
+ * Copyright (c) 1996, 1997, 1998, 1999, 2000 The Open Group
+ * ALL RIGHTS RESERVED (MOTIF). See the file named COPYRIGHT.MOTIF for
+ * the full copyright text.
+ * 
+ * This software is subject to an open license. It may only be
+ * used on, with or for operating systems which are themselves open
+ * source systems. You must contact The Open Group for a license
+ * allowing distribution and sublicensing of this software on, with,
+ * or for operating systems which are not Open Source programs.
+ * 
+ * See http://www.opengroup.org/openmotif/license for full
+ * details of the license agreement. Any use, reproduction, or
+ * distribution of the program constitutes recipient's acceptance of
+ * this agreement.
+ * 
+ * EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, THE PROGRAM IS
+ * PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT LIMITATION, ANY
+ * WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY
+ * OR FITNESS FOR A PARTICULAR PURPOSE
+ * 
+ * EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, NEITHER RECIPIENT
+ * NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OR DISTRIBUTION OF THE PROGRAM OR THE
+ * EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
 */ 
 /* 
  * Motif Release 1.2.4
 */
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 
  
 #ifdef REV_INFO
@@ -58,8 +71,10 @@ static char rcsid[] = "$TOG: WmManage.c /main/11 1998/01/12 16:45:48 cshi $"
 #include "WmImage.h"
 #include "WmKeyFocus.h"
 #ifdef PANELIST
+#ifdef USE_DT
 #include "WmPanelP.h"	/* typedef needed in WmManage.h */
 #include <Dt/Message.h>
+#endif
 #include "WmIPC.h"
 #endif /* PANELIST */
 #include "WmManage.h"
@@ -83,6 +98,7 @@ static char rcsid[] = "$TOG: WmManage.c /main/11 1998/01/12 16:45:48 cshi $"
 
 #ifdef PANELIST
 
+#ifdef REG_EMB_CLI
 Boolean IsEmbeddedClient (
     ClientData *pCD, 
     WmFpEmbeddedClientData **ppECD);
@@ -93,6 +109,8 @@ Boolean ManageEmbeddedClient (
 Boolean IsPushRecallClient (
     ClientData *pCD, 
     WmFpPushRecallClientData **ppPRCD);
+#endif /* REG_EMB_CLI */
+
 static void HandleSubstructEvents(
         Widget w,
         caddr_t ptr,
@@ -333,8 +351,14 @@ ManageWindow (WmScreenData *pSD, Window clientWindow, long manageFlags)
     WmWorkspaceData *pwsi;
 #endif /* WSM */
 #ifdef PANELIST 
+#ifdef REG_EMB_CLI
     WmFpEmbeddedClientData *pECD;
+#endif /* REG_EMB_CLI */
 #endif /* PANELIST */
+
+#if 0
+    fprintf(stderr,"WmManage ManageWindow\n");
+#endif
 
     /*
      * Get client information including window attributes and window
@@ -350,6 +374,7 @@ ManageWindow (WmScreenData *pSD, Window clientWindow, long manageFlags)
 
 
 #ifdef PANELIST
+#ifdef REG_EMB_CLI
     /*
      *  Handle case of transients that derive from embedded clients.
      */
@@ -404,7 +429,10 @@ ManageWindow (WmScreenData *pSD, Window clientWindow, long manageFlags)
 	    pCD->transientLeader->pAccessPanel->pCD_accessPanel;
     }
 #endif 
+
+#endif /* REG_EMB_CLI */
 #endif /* PANELIST */
+
 #ifdef WSM
     if (pCD->inputMode == MWM_INPUT_SYSTEM_MODAL)
     {
@@ -858,6 +886,7 @@ ManageWindow (WmScreenData *pSD, Window clientWindow, long manageFlags)
 void UnManageWindow (ClientData *pCD)
 {
 #ifdef PANELIST
+#ifdef REG_EMB_CLI
     if (pCD->pECD)
     {
 	WmFpEmbeddedClientData *pECD;
@@ -897,6 +926,7 @@ void UnManageWindow (ClientData *pCD)
 	}
 	pCD->pPRCD = NULL;
     }
+#endif /* REG_EMB_CLI */
 #endif /* PANELIST */
     /*
      * Withdraw all the transient children of this window.
@@ -1805,6 +1835,7 @@ void ReManageDialog (WmScreenData *pSD, Widget dialogboxW)
  *
  *************************************<->***********************************/
 
+#ifdef REG_EMB_CLI
 void
 RegisterEmbeddedClients (
 	Widget wPanelist, 
@@ -1838,6 +1869,8 @@ RegisterEmbeddedClients (
 #endif /* DEBUG */
 
 } /* END OF FUNCTION RegisterEmbeddedClients */
+
+#endif /* REG_EMB_CLI */
 
 
 #define LTT_INCREMENT  16
@@ -2059,6 +2092,7 @@ ReManageWindow (
  *
  *************************************<->***********************************/
 
+#ifdef REG_EMB_CLI
 void
 ScanForEmbeddedClients (
 	WmScreenData *pSD)
@@ -2127,6 +2161,7 @@ ScanForEmbeddedClients (
     }
 
 } /* END OF FUNCTION ScanForEmbeddedClients */
+#endif /* REG_EMB_CLI */
 
 
 /*************************************<->*************************************
@@ -2152,8 +2187,8 @@ ScanForEmbeddedClients (
  *
  *************************************<->***********************************/
 
+#ifdef REG_EMB_CLI
 Boolean
-
 IsEmbeddedClient (ClientData *pCD, WmFpEmbeddedClientData **ppECD)
 
 {
@@ -2185,6 +2220,7 @@ IsEmbeddedClient (ClientData *pCD, WmFpEmbeddedClientData **ppECD)
     return (bFoundMatch);
 
 } /* END OF FUNCTION IsEmbeddedClient */
+#endif /* REG_EMB_CLI */
 
 
 /******************************<->*************************************
@@ -2213,8 +2249,9 @@ IsEmbeddedClient (ClientData *pCD, WmFpEmbeddedClientData **ppECD)
  *  front panel and is NOT to be managed as a normal top level
  *  window--no further processing required.
  ******************************<->***********************************/
-Boolean
 
+#ifdef REG_EMB_CLI
+Boolean
 ManageEmbeddedClient (
     ClientData *pCD, 
     WmFpEmbeddedClientData *pECD,
@@ -2350,6 +2387,8 @@ ManageEmbeddedClient (
 
 } /* END OF FUNCTION ManageEmbeddedClient */
 
+#endif /* REG_EMB_CLI */
+
 
 /******************************<->*************************************
  *
@@ -2381,8 +2420,9 @@ ManageEmbeddedClient (
  *  Returns True if this client has been reparented to the new
  *  control.
  ******************************<->***********************************/
-Boolean
 
+#ifdef REG_EMB_CLI
+Boolean
 ReparentEmbeddedClient (
     WmFpEmbeddedClientData *pECD,
     Widget newControl,
@@ -2476,6 +2516,8 @@ ReparentEmbeddedClient (
     return(True); /* successful reparent */
 
 } /* END OF FUNCTION ReparentEmbeddedClient */
+
+#endif /* REG_EMB_CLI */
 
 
 /*************************************<->*************************************
@@ -2863,6 +2905,8 @@ HandleSubstructEvents(
  *
  * 
  ******************************<->***********************************/
+
+#ifdef REG_EMB_CLI
 Boolean 
 UpdateEmbeddedClientsProperty(
         WmScreenData *pSD )
@@ -2917,6 +2961,7 @@ UpdateEmbeddedClientsProperty(
     return (rval);
 } /* END OF FUNCTION UpdateEmbeddedClientsProperty */
 
+#endif /* REG_EMB_CLI */
 
 
 /*******************************<->*************************************
@@ -2941,6 +2986,8 @@ UpdateEmbeddedClientsProperty(
  *  root window
  * 
  ******************************<->***********************************/
+
+#ifdef REG_EMB_CLI
 void 
 UnParentControls(
         WmScreenData *pSD,
@@ -2989,6 +3036,8 @@ UnParentControls(
     }
     
 } /* END OF FUNCTION UnParentControl */
+
+#endif /* REG_EMB_CLI */
 
 
 

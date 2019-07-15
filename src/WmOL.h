@@ -1,3 +1,6 @@
+
+#include <localdef.h>
+
 /* $XConsortium: WmOL.h /main/4 1995/11/01 11:45:27 rswiston $ */
 /* 
  * (c) Copyright 1989 Sun Microsystems, Inc.
@@ -9,9 +12,6 @@
 #define _WM_OL_H
 
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 
 
 #ifndef NO_OL_COMPAT

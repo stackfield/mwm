@@ -1,31 +1,44 @@
+
+#include <localdef.h>
+
 /* 
- * Motif
- *
- * Copyright (c) 1987-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
+ * @OPENGROUP_COPYRIGHT@
+ * COPYRIGHT NOTICE
+ * Copyright (c) 1989, 1990, 1991, 1992, 1993, 1994 Open Software Foundation, Inc. 
+ * Copyright (c) 1996, 1997, 1998, 1999, 2000 The Open Group
+ * ALL RIGHTS RESERVED (MOTIF). See the file named COPYRIGHT.MOTIF for
+ * the full copyright text.
+ * 
+ * This software is subject to an open license. It may only be
+ * used on, with or for operating systems which are themselves open
+ * source systems. You must contact The Open Group for a license
+ * allowing distribution and sublicensing of this software on, with,
+ * or for operating systems which are not Open Source programs.
+ * 
+ * See http://www.opengroup.org/openmotif/license for full
+ * details of the license agreement. Any use, reproduction, or
+ * distribution of the program constitutes recipient's acceptance of
+ * this agreement.
+ * 
+ * EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, THE PROGRAM IS
+ * PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT LIMITATION, ANY
+ * WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY
+ * OR FITNESS FOR A PARTICULAR PURPOSE
+ * 
+ * EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, NEITHER RECIPIENT
+ * NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OR DISTRIBUTION OF THE PROGRAM OR THE
+ * EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
 */ 
 /* 
  * Motif Release 1.2.4
 */ 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 
 
 #ifdef REV_INFO
@@ -174,6 +187,7 @@ extern int firstTime;
 extern char * pWarningStringFile;
 extern char * pWarningStringLine;
 #endif
+
 
 /*
  * InitMouseBinding
@@ -544,7 +558,7 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
      * Initialize cursor size info and 
      * display the startup cursor.
      */
-    
+
     InitCursorInfo ();
 #ifdef WSM
     InitWmDisplayEnv ();
@@ -1010,7 +1024,9 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
      */
     for (scr = 0; scr < wmGD.numScreens; scr++)
     {
+
 	pSD = &(wmGD.Screens[scr]);
+
 
 	if (pSD->managed)
 	{
@@ -1063,7 +1079,15 @@ void InitWmGlobal (int argc, char *argv [], char *environ [])
 	     */
 
 	    MakeWmFunctionResources (pSD);
-	}
+
+#ifdef ADD_PAN
+    pSD->panDx=0;
+    pSD->panDy=0;
+    pSD->panning=0;
+#endif
+
+	} /* if pSD, is managed (ptr scr dat) */
+
 
 #ifdef WSM
         /*
@@ -1477,8 +1501,6 @@ InitWmScreen (WmScreenData *pSD, int sNum)
 	    ScreenOfDisplay(DISPLAY, sNum)); 	argnum++;
     XtSetArg (args[argnum], XtNcolormap, 
 	    DefaultColormap(DISPLAY, sNum)); 	argnum++;
-    XtSetArg (args[argnum], XtNvisual, 
-	    DefaultVisual(DISPLAY, sNum)); 	argnum++;
 
     pSD->screenTopLevelW = XtCreatePopupShell ((String) wmGD.screenNames[sNum],
 					       vendorShellWidgetClass,
@@ -2712,3 +2734,4 @@ VirtKeys4DIN(
 #ifdef WSM
 /****************************   eof    ***************************/
 #endif /* WSM */
+

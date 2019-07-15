@@ -1,31 +1,44 @@
+
+#include <localdef.h>
+
 /* 
- * Motif
- *
- * Copyright (c) 1987-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
+ * @OPENGROUP_COPYRIGHT@
+ * COPYRIGHT NOTICE
+ * Copyright (c) 1989, 1990, 1991, 1992, 1993 Open Software Foundation, Inc. 
+ * Copyright (c) 1996, 1997, 1998, 1999, 2000 The Open Group
+ * ALL RIGHTS RESERVED (MOTIF). See the file named COPYRIGHT.MOTIF for
+ * the full copyright text.
+ * 
+ * This software is subject to an open license. It may only be
+ * used on, with or for operating systems which are themselves open
+ * source systems. You must contact The Open Group for a license
+ * allowing distribution and sublicensing of this software on, with,
+ * or for operating systems which are not Open Source programs.
+ * 
+ * See http://www.opengroup.org/openmotif/license for full
+ * details of the license agreement. Any use, reproduction, or
+ * distribution of the program constitutes recipient's acceptance of
+ * this agreement.
+ * 
+ * EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, THE PROGRAM IS
+ * PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT LIMITATION, ANY
+ * WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY
+ * OR FITNESS FOR A PARTICULAR PURPOSE
+ * 
+ * EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, NEITHER RECIPIENT
+ * NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OR DISTRIBUTION OF THE PROGRAM OR THE
+ * EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
 */ 
 /* 
  * Motif Release 1.2.3
 */ 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 
 
 #ifdef REV_INFO
@@ -134,7 +147,7 @@ int DefaultWsColorSetId (WmWorkspaceData *pWS);
 #endif /* WSM */
 void _WmGetDynamicDefault (Widget widget, unsigned char type, String defaultColor, Pixel newBackground, XrmValue *value);
 Boolean SimilarAppearanceData (AppearanceData *pAD1, AppearanceData *pAD2);
-void DefaultFont (Widget w, int offset, XrmValue *value);
+
 
 
 /*
@@ -1560,6 +1573,54 @@ XtResource wmScreenResources[] =
 	(XtPointer)0
 #endif /* WSM */
     }
+#ifdef ADD_PAN
+    ,
+    {
+	WmNusePan,
+	WmCUsePan,
+	XtRBoolean,
+	sizeof (Boolean),
+	XtOffsetOf (WmScreenData, usePan),
+	XtRImmediate,
+	(XtPointer)True
+    },
+    {
+	WmNpanUseX,
+	WmCPanUseX,
+	XtRBoolean,
+	sizeof (Boolean),
+	XtOffsetOf (WmScreenData, panUseX),
+	XtRImmediate,
+	(XtPointer)False
+    },
+    {
+	WmNpanUseMwm,
+	WmCPanUseMwm,
+	XtRBoolean,
+	sizeof (Boolean),
+	XtOffsetOf (WmScreenData, panUseMwm),
+	XtRImmediate,
+	(XtPointer)False
+    },
+    {
+	WmNpanScrollX,
+	WmCPanScrollX,
+	XtRInt,
+	sizeof (int),
+	XtOffsetOf (WmScreenData, panScrollX),
+	XtRImmediate,
+	(XtPointer) 25
+    },
+    {
+	WmNpanScrollY,
+	WmCPanScrollY,
+	XtRInt,
+	sizeof (int),
+	XtOffsetOf (WmScreenData, panScrollY),
+	XtRImmediate,
+	(XtPointer) 25
+    }
+#endif /* ADD_PAN */
 
 };
 
@@ -2273,17 +2334,6 @@ XtResource wmClientResourcesM[] =
 XtResource wmAppearanceResources[] =
 {
 
-
-    {
-        XmNrenderTable,
-        XmCRenderTable,
-        XmRRenderTable,
-        sizeof(XmRenderTable),
-        XtOffsetOf (AppearanceData, renderTable),
-        XtRCallProc,
-        (XtPointer) DefaultFont
-    },
-    
     {
 	XmNfontList,
 	XmCFontList,
@@ -4436,7 +4486,6 @@ void
 MakeAppearanceResources (WmScreenData *pSD, AppearanceData *pAData, Boolean makeActiveResources)
 {
     Pixel foreground;
-    XmString xmstring;
 
     /*
      * Extract a font from the font list.
@@ -4457,11 +4506,7 @@ MakeAppearanceResources (WmScreenData *pSD, AppearanceData *pAData, Boolean make
         + WM_TITLE_BAR_PADDING;
 #endif
 
-    xmstring = XmStringCreateLocalized("TEST STRING");
-    pAData->titleHeight = (int) XmStringHeight(pAData->renderTable,xmstring)
-                          + WM_TITLE_BAR_PADDING;
-    XmStringFree(xmstring);
-    
+
     /*
      * Make standard (inactive) appearance resources.
      */
@@ -6560,20 +6605,3 @@ Monochrome (Screen *screen)
 #ifdef WSM
 /****************************   eof    ***************************/
 #endif /* WSM */
-
-void
-DefaultFont (
-        Widget w,
-        int offset,
-        XrmValue *value)
-{
- static XmRenderTable  f1;
- 
- /* Find the default render table associated with the default
-    render table type. */
- f1 = XmeGetDefaultRenderTable (w,
-				XmLABEL_RENDER_TABLE);
- 
-   value->addr = (XtPointer)&f1;
-   value->size = sizeof(f1);
-}

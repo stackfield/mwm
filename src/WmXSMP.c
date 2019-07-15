@@ -1,3 +1,6 @@
+
+#include <localdef.h>
+
 /* $XConsortium: WmXSMP.c /main/12 1996/05/17 12:54:14 rswiston $ */
 /*
  * (c) Copyright 1996 Digital Equipment Corporation.
@@ -9,9 +12,6 @@
  * (c) Copyright 1996 Hitachi.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 
 
 #include <stdio.h>
@@ -29,8 +29,6 @@
 # include "WmWrkspace.h"
 # include <Dt/Session.h>
 #endif
-
-#define FIX_1193
 
 typedef struct _ProxyClientInfo
 {
@@ -451,11 +449,11 @@ freeNewRestartCmd(char **restartCmd)
 #ifdef FIX_1193
     if(restartCmd)
     {
-	char **tmp = restartCmd;
-	while (*restartCmd != (char *)NULL)
-		XtFree(*(restartCmd++));
+        char **tmp = restartCmd;
+        while (*restartCmd != (char *)NULL)
+                XtFree(*(restartCmd++));
 
-	XtFree((char *)tmp);
+        XtFree((char *)tmp);
     }
 #else
     while (*restartCmd != (char *)NULL)

@@ -1,31 +1,44 @@
+
+#include <localdef.h>
+
 /* 
- * Motif
- *
- * Copyright (c) 1987-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
+ * @OPENGROUP_COPYRIGHT@
+ * COPYRIGHT NOTICE
+ * Copyright (c) 1989, 1990, 1991, 1992, 1993 Open Software Foundation, Inc. 
+ * Copyright (c) 1996, 1997, 1998, 1999, 2000 The Open Group
+ * ALL RIGHTS RESERVED (MOTIF). See the file named COPYRIGHT.MOTIF for
+ * the full copyright text.
+ * 
+ * This software is subject to an open license. It may only be
+ * used on, with or for operating systems which are themselves open
+ * source systems. You must contact The Open Group for a license
+ * allowing distribution and sublicensing of this software on, with,
+ * or for operating systems which are not Open Source programs.
+ * 
+ * See http://www.opengroup.org/openmotif/license for full
+ * details of the license agreement. Any use, reproduction, or
+ * distribution of the program constitutes recipient's acceptance of
+ * this agreement.
+ * 
+ * EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, THE PROGRAM IS
+ * PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT LIMITATION, ANY
+ * WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY
+ * OR FITNESS FOR A PARTICULAR PURPOSE
+ * 
+ * EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, NEITHER RECIPIENT
+ * NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OR DISTRIBUTION OF THE PROGRAM OR THE
+ * EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
 */ 
 /* 
  * Motif Release 1.2.3
 */
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 
  
 #ifdef REV_INFO
@@ -50,6 +63,13 @@ static char rcsid[] = "$TOG: WmWinInfo.c /main/18 1999/02/04 15:17:25 mgreess $"
 
 #include <Xm/Xm.h>
 #include <X11/Xlocale.h>
+
+#if defined(__GLIBC__)
+#ifndef _LOCALE_H
+#include <locale.h>
+#endif
+#endif
+
 #ifdef PANELIST
 #include "WmPanelP.h"
 #endif /* PANELIST */
@@ -135,6 +155,9 @@ GetClientInfo (WmScreenData *pSD, Window clientWindow, long manageFlags)
     ClientData *pCD;
     XSetWindowAttributes sAttributes;
 
+#if 0
+    fprintf(stderr,"gci\n");
+#endif
 
     /*
      * Allocate and initialize a client data structure:
@@ -151,6 +174,8 @@ GetClientInfo (WmScreenData *pSD, Window clientWindow, long manageFlags)
     /*
      * Initialize the data structure:
      */
+
+#ifndef PAN250
 
     pCD->client = clientWindow;
     pCD->clientID = ++(pSD->clientCounter);
@@ -178,7 +203,6 @@ GetClientInfo (WmScreenData *pSD, Window clientWindow, long manageFlags)
     pCD->focusPriority = 0;
     pCD->focusAutoRaiseDisabled = False;
     pCD->focusAutoRaiseDisablePending = False;
-
     pCD->clientClass = NULL;
     pCD->clientName = NULL;
     pCD->clientFrameWin = (Window)0L;
@@ -208,7 +232,6 @@ GetClientInfo (WmScreenData *pSD, Window clientWindow, long manageFlags)
     pCD->paInitialProperties = NULL;
     pCD->numInitialProperties = 0;
 #endif /* WSM */
-
     pCD->decorFlags = 0L;
     pCD->pTitleGadgets = NULL;
     pCD->cTitleGadgets = 0;
@@ -227,19 +250,40 @@ GetClientInfo (WmScreenData *pSD, Window clientWindow, long manageFlags)
 #ifndef NO_OL_COMPAT
     pCD->bPseudoTransient = False;
 #endif /* NO_OL_COMPAT */
-
     pCD->maxWidth = pCD->maxWidthLimit = BIGSIZE;
     pCD->maxHeight = pCD->maxHeightLimit = BIGSIZE;
     pCD->maxConfig = FALSE;
     pCD->pSD = pSD;
     pCD->dataType = CLIENT_DATA_TYPE;
     pCD->window_status = 0L;
-
     pCD->clientEntry.nextSibling = NULL;
     pCD->clientEntry.prevSibling = NULL;
     pCD->clientEntry.pCD = NULL;
-
     pCD->smClientID = (String)NULL;
+
+#else /* PAN250 */
+
+    /* assume core val not used and NULL,False are 0 */
+    memset(pCD,0,sizeof(ClientData));
+    pCD->client = clientWindow;
+    pCD->clientID = ++(pSD->clientCounter);
+    pCD->clientFlags = WM_INITIALIZATION;
+#ifndef WSM
+    pCD->iconPlace = NO_ICON_PLACE;
+#endif /* WSM */
+#ifdef WSM
+    pCD->dtwmFunctions = DtWM_FUNCTION_OCCUPY_WS;
+#endif /* WSM */
+    pCD->internalBevel = (wmGD.frameStyle == WmSLAB) ? 0 : 
+						FRAME_INTERNAL_SHADOW_WIDTH;
+    pCD->maxWidth = pCD->maxWidthLimit = BIGSIZE;
+    pCD->maxHeight = pCD->maxHeightLimit = BIGSIZE;
+    pCD->pSD = pSD;
+    pCD->dataType = CLIENT_DATA_TYPE;
+
+#endif /* PAN250 */
+
+
 
      /*
      * Do special processing for client windows that are controlled by
@@ -452,6 +496,9 @@ GetClientInfo (WmScreenData *pSD, Window clientWindow, long manageFlags)
 
     InitCColormapData (pCD);
 
+#if 0
+    fprintf(stderr,"gci DONE\n");
+#endif
 
     /* successful return */
 
@@ -1546,6 +1593,9 @@ ProcessWmNormalHints (ClientData *pCD, Boolean firstTime, long manageFlags)
 
     if (firstTime)
     {
+#if 0
+        fprintf(stderr,"first time\n");
+#endif
         /*
          * Process client window size flags and information:
          */
@@ -1560,11 +1610,22 @@ ProcessWmNormalHints (ClientData *pCD, Boolean firstTime, long manageFlags)
          * configuration. Mwm 1.1 always uses the current conventions.
          */
 
+    /* R2_COMPAT was set in Makefile.am, oddly */
 #ifdef R2_COMPAT
     /* 
      * Maintain R2 compatiblity code for CND product xnm
      */
+#ifdef PAN250
+        /*
+         *  Xrm is done before HINTS and somehow arrives as hint
+         *    unsure if xclock sends HINT , doubt it, uses Xt , no ChangeProp
+         *    likely mwm somehow kept from Xrm read and Xlock didnt hint
+         */
+
+        if ( OK_ICCC_R  &&
+#else
         if ((pNormalHints->icccVersion == ICCC_R2) &&
+#endif
             (flags & (US_POSITION | P_POSITION)) &&
 	    !(manageFlags & MANAGEW_WM_RESTART))
         {
@@ -1595,10 +1656,20 @@ ProcessWmNormalHints (ClientData *pCD, Boolean firstTime, long manageFlags)
     /* 
      * Maintain R2 compatiblity code for CND product xnm
      */
-	if ((pNormalHints->icccVersion == ICCC_R2) &&
+#ifdef PAN250
+        if ( OK_ICCC_R  &&
+#else
+        if ((pNormalHints->icccVersion == ICCC_R2) &&
+#endif
 	    (flags & (US_SIZE | P_SIZE)) &&
 	    !(manageFlags & MANAGEW_WM_RESTART))
 	{
+#if 0
+            fprintf(stderr,"pcd %d,%d  hint %d,%d\n",
+              pCD->clientWidth,pCD->clientHeight,pNormalHints->width,
+              pNormalHints->height);
+            if (pCD->clientWidth == 0) /* test */
+#endif
 	    if (!(pCD->clientFlags & SM_WIDTH))
 		pCD->clientWidth = pNormalHints->width;
 	    if (!(pCD->clientFlags & SM_HEIGHT))
@@ -1686,7 +1757,13 @@ ProcessWmNormalHints (ClientData *pCD, Boolean firstTime, long manageFlags)
 	pCD->baseHeight =
 		(pNormalHints->base_height < 0) ? 0 : pNormalHints->base_height;
     }
-    else if ((pNormalHints->icccVersion == ICCC_R2) &&
+    else
+
+#ifdef PAN250
+        if ( OK_ICCC_R  &&
+#else
+        if ((pNormalHints->icccVersion == ICCC_R2) &&
+#endif
 	     ((firstTime) ||
 	      (!firstTime && (flags & P_MIN_SIZE))))
     {
@@ -1969,7 +2046,11 @@ ProcessWmNormalHints (ClientData *pCD, Boolean firstTime, long manageFlags)
     }
     else
     {
-        if (pNormalHints->icccVersion == ICCC_R2)
+#ifdef PAN250
+        if ( OK_ICCC_R )
+#else
+        if ( (pNormalHints->icccVersion == ICCC_R2) )
+#endif
 	{
 	    pCD->windowGravity = wmGD.windowAttributes.win_gravity;
 	}
@@ -4050,7 +4131,7 @@ ProcessMwmHints (ClientData *pCD)
 		/* client indicating applicable functions */
 		pCD->clientFunctions &= pHints->functions;
 	    }
-#if 0
+#if 0  /* if 0 orig to 2.2.3 */
 	    if (!(pCD->clientFlags & GOT_DT_WM_HINTS) &&
 		!pHints->functions)
 	    {

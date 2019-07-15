@@ -1,32 +1,45 @@
+
+#include <localdef.h>
+
 #ifndef _WmGlobal_h
 #define _WmGlobal_h
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 
 
 /* 
- * Motif
- *
- * Copyright (c) 1987-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
+ * @OPENGROUP_COPYRIGHT@
+ * COPYRIGHT NOTICE
+ * Copyright (c) 1989, 1990, 1991, 1992, 1993, 1994 Open Software Foundation, Inc. 
+ * Copyright (c) 1996, 1997, 1998, 1999, 2000 The Open Group
+ * ALL RIGHTS RESERVED (MOTIF). See the file named COPYRIGHT.MOTIF for
+ * the full copyright text.
+ * 
+ * This software is subject to an open license. It may only be
+ * used on, with or for operating systems which are themselves open
+ * source systems. You must contact The Open Group for a license
+ * allowing distribution and sublicensing of this software on, with,
+ * or for operating systems which are not Open Source programs.
+ * 
+ * See http://www.opengroup.org/openmotif/license for full
+ * details of the license agreement. Any use, reproduction, or
+ * distribution of the program constitutes recipient's acceptance of
+ * this agreement.
+ * 
+ * EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, THE PROGRAM IS
+ * PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT LIMITATION, ANY
+ * WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY
+ * OR FITNESS FOR A PARTICULAR PURPOSE
+ * 
+ * EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, NEITHER RECIPIENT
+ * NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OR DISTRIBUTION OF THE PROGRAM OR THE
+ * EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
 */ 
 /* 
  * Motif Release 1.2.4
@@ -64,12 +77,16 @@
 #include <Xm/Xm.h>
 #ifdef WSM
 #include <Xm/ColorObjP.h>
+#ifdef USE_DT
 #include <Dt/Service.h>
 #include <Dt/Wsm.h>
 #include <Dt/WsmP.h>
 #include "WmParse.h"
+#endif
 #ifdef PANELIST
+#ifdef USE_DT
 #include <Dt/Action.h>
+#endif
 #endif /* PANELIST */
 #endif /* WSM */
 
@@ -162,6 +179,12 @@ extern Pixel		FPselectcolor;
 
 /* automation support */
 # define _XA_MOTIF_WM_AUTOMATION 		"_MOTIF_WM_AUTOMATION"
+
+#if defined(ADD_PAN)
+#define _XA_MOTIF_WM_PAN				"_MOTIF_WM_PAN"
+#define _XA_MOTIF_WM_GOTO			"_MOTIF_WM_GOTO"
+#endif
+
 #endif /* !defined(WSM) || defined(MWM_QATS_PROTOCOL) */
 
 /* window manager exit value on fatal errors: */
@@ -477,7 +500,6 @@ typedef struct _KeySpec
     WmFunction	 wmFunction;
     String	 wmFuncArgs;
     struct _KeySpec *nextKeySpec;
-
 } KeySpec;
 
 typedef struct _ButtonSpec
@@ -491,7 +513,6 @@ typedef struct _ButtonSpec
     WmFunction	wmFunction;
     String	wmFuncArgs;
     struct _ButtonSpec *nextButtonSpec;
-
 } ButtonSpec;
 
 
@@ -845,7 +866,6 @@ typedef struct _MenuItem
     CARD32	 clientCommandID;
 #endif /* !defined(WSM) || defined(MWM_QATS_PROTOCOL) */
     struct _MenuItem *nextMenuItem;
-
 } MenuItem;
 
 #ifdef WSM
@@ -899,9 +919,7 @@ typedef struct _MenuSpec
     CARD32         commandID;       /* if this is a client command, then this
 				       its id value - globally unique. */
 #endif /* !defined(WSM) || defined(MWM_QATS_PROTOCOL) */
-
     struct _MenuSpec *nextMenuSpec;
-
 } MenuSpec;
 
 #if ((!defined(WSM)) || defined(MWM_QATS_PROTOCOL))
@@ -915,7 +933,6 @@ typedef struct _CmdTree {
   char            *defaultName; /* default label of menu. */
   struct _CmdTree *subTrees;    /* list of child commands or command sets. */
   struct _CmdTree *next;
-
 } CmdTree;
 
 
@@ -928,7 +945,6 @@ typedef struct _matchlist {
     String             funcargs;
     Context            greyed_context;
     struct _matchlist *next;
-
 } MatchList;
 #endif /* !defined(WSM) || defined(MWM_QATS_PROTOCOL) */
 
@@ -947,7 +963,6 @@ typedef struct _WindowItem
 {
     String              window;
     struct _WindowItem *nextWindowItem;
-
 } WindowItem;
 
 typedef struct _WindowSet
@@ -955,7 +970,6 @@ typedef struct _WindowSet
     String             name;
     WindowItem        *windowItems;
     struct _WindowSet *nextWindowSet;
-
 } WindowSet;
 
 typedef struct _FunctionItem
@@ -963,7 +977,6 @@ typedef struct _FunctionItem
     WmFunction		  wmFunction;
     String                wmFuncArgs;
     struct _FunctionItem *nextFunctionItem;
-
 } FunctionItem;
 
 typedef struct _FunctionSet
@@ -971,7 +984,6 @@ typedef struct _FunctionSet
     String               name;
     FunctionItem        *functionItems;
     struct _FunctionSet *nextFunctionSet;
-
 } FunctionSet;
 
 /*************************************<->*************************************
@@ -992,7 +1004,6 @@ typedef struct _WmTimer
     struct _ClientData	*timerCD;
     unsigned int	timerType;
     struct _WmTimer	*nextWmTimer;
-
 } WmTimer;
 
 /* Timer types: */
@@ -1037,7 +1048,6 @@ typedef struct _RList
 
 typedef struct _AppearanceData
 {
-    XmRenderTable renderTable;
     XmFontList	fontList;			/* resource */
     XFontStruct	*font;
 #ifndef NO_MULTIBYTE
@@ -1193,7 +1203,6 @@ typedef struct _PixmapCache
    Pixel         background;
    Pixmap        pixmap;
    struct _PixmapCache *next;
-
 } PixmapCache;
 
 typedef struct _BitmapCache
@@ -1229,7 +1238,6 @@ typedef struct _ClientListEntry
     struct _ClientListEntry *prevSibling;
     int		type;
     struct _ClientData *pCD;
-
 } ClientListEntry;
 
 
@@ -1481,6 +1489,14 @@ typedef struct _WmScreenData
     struct _WmWorkspaceData	*pWS;
 #endif /* WSM */
 
+#ifdef ADD_PAN
+    Boolean usePan, panUseX, panUseMwm;	/* default is Mwm if pcd, else X */
+    int panScrollX, panScrollY;
+    int panDx, panDy ;			/* always 0,0 not used by mwm|panner */
+    int panning;		/* disable offscreen +dx in WmWinConf.c panning
+    			 	 * else need new ProcessNewConfiguration2 */
+#endif
+
 } WmScreenData;
 
 typedef struct _WmScreenData *PtrScreenData;
@@ -1557,6 +1573,7 @@ typedef struct _WmBackdropData
     Window		window;
 } BackdropData;
 
+typedef struct _WmBackdropData *PtrBackdropData;
 
 /*
  * bit definiton for "flags" member of BackdropData
@@ -1565,8 +1582,6 @@ typedef struct _WmBackdropData
 #define BACKDROP_CLIENT		(1L<<1)
 #define BACKDROP_BITMAP		(1L<<2)
 #define BACKDROP_IMAGE_ALLOCED	(1L<<3)	 /* image string can be freed */
-
-typedef struct _WmBackdropData *PtrBackdropData;
 
 #define DEFAULT_BACKDROP_DIR CDE_INSTALLATION_TOP "/backdrops"
 
@@ -2208,7 +2223,10 @@ typedef struct _WmGlobalData
     Atom	_MOTIF_WM_INVOKE_COMMAND;
     Atom	_MOTIF_WM_REQUEST_COMMAND;
     Atom	_MOTIF_WM_WINDOW_FLAGS;
-
+#if defined(ADD_PAN)
+    Atom	_MOTIF_WM_PAN;
+    Atom	_MOTIF_WM_GOTO;
+#endif
     /* automation support */
     Atom        _MOTIF_WM_AUTOMATION;
 #endif /* !defined(WSM) || defined(MWM_QATS_PROTOCOL) */

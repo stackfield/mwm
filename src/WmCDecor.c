@@ -1,31 +1,44 @@
+
+#include <localdef.h>
+
 /* 
- * Motif
- *
- * Copyright (c) 1987-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
+ * @OPENGROUP_COPYRIGHT@
+ * COPYRIGHT NOTICE
+ * Copyright (c) 1989, 1990, 1991, 1992 Open Software Foundation, Inc. 
+ * Copyright (c) 1996, 1997, 1998, 1999, 2000 The Open Group
+ * ALL RIGHTS RESERVED (MOTIF). See the file named COPYRIGHT.MOTIF for
+ * the full copyright text.
+ * 
+ * This software is subject to an open license. It may only be
+ * used on, with or for operating systems which are themselves open
+ * source systems. You must contact The Open Group for a license
+ * allowing distribution and sublicensing of this software on, with,
+ * or for operating systems which are not Open Source programs.
+ * 
+ * See http://www.opengroup.org/openmotif/license for full
+ * details of the license agreement. Any use, reproduction, or
+ * distribution of the program constitutes recipient's acceptance of
+ * this agreement.
+ * 
+ * EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, THE PROGRAM IS
+ * PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT LIMITATION, ANY
+ * WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY
+ * OR FITNESS FOR A PARTICULAR PURPOSE
+ * 
+ * EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, NEITHER RECIPIENT
+ * NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OR DISTRIBUTION OF THE PROGRAM OR THE
+ * EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
 */ 
 /* 
  * Motif Release 1.2.1
 */ 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 
 
 #ifdef REV_INFO
@@ -52,6 +65,11 @@ static char rcsid[] = "$XConsortium: WmCDecor.c /main/7 1996/06/20 09:38:16 rswi
 /* 
  * Definitions
  */
+
+/* pan doesnt use anyway */
+#if (defined(WMM_WSM) || defined(PANELIST) || defined(PANACOMM)) && defined(ADD_PAN)
+#include "WmGlobal.h"
+#endif
 
 /*
  * include extern functions
@@ -753,11 +771,13 @@ void GenerateFrameDisplayLists (ClientData *pcd)
 	else 
 	{
 #ifdef PANELIST
+#ifdef USE_DT
             if((pcd->dtwmBehaviors & DtWM_BEHAVIOR_PANEL) &&
                (pcd->clientDecoration == WM_DECOR_BORDER))
             {
                 insideBevel = 0;
             }
+#endif
 #endif /* PANELIST */
 	    BevelRectangle (pcd->pclientBottomShadows, 	/* inside */
 			    pcd->pclientTopShadows, 
@@ -1215,7 +1235,7 @@ void DrawWindowTitle (ClientData *pcd, Boolean eraseFirst)
     unsigned long decoration = pcd->decor;
     XRectangle textBox;
     Window win;
-    XmRenderTable  renderTable;
+    XmFontList  fontList;
 
     /* make sure there is a title bar first */
     if (!(decoration & MWM_DECOR_TITLE))
@@ -1239,7 +1259,7 @@ void DrawWindowTitle (ClientData *pcd, Boolean eraseFirst)
 	textBox.y -= (short) pcd->frameInfo.upperBorderWidth;
 
 	win = pcd->clientTitleWin;
-	renderTable = CLIENT_TITLE_APPEARANCE(pcd).renderTable;
+	fontList = CLIENT_TITLE_APPEARANCE(pcd).fontList;
     }
     else 
     {
@@ -1254,7 +1274,7 @@ void DrawWindowTitle (ClientData *pcd, Boolean eraseFirst)
 	/* get the area that the text must fit in */
 	GetTextBox (pcd, &textBox);
 	win = pcd->clientFrameWin;
-	renderTable = CLIENT_APPEARANCE(pcd).renderTable;
+	fontList = CLIENT_APPEARANCE(pcd).fontList;
     }
 
     if (eraseFirst)
@@ -1265,16 +1285,16 @@ void DrawWindowTitle (ClientData *pcd, Boolean eraseFirst)
     }
 
 #ifdef  DT_LEFT_JUSTIFIED_TITLE
-    WmDrawXmString(DISPLAY, win, renderTable, pcd->clientTitle, clientGC,
+    WmDrawXmString(DISPLAY, win, fontList, pcd->clientTitle, clientGC,
 		   textBox.x, textBox.y, textBox.width, &textBox,
 		   ((wmGD.frameStyle == WmSLAB) ? False : True));
 #else /* DT_LEFT_JUSTIFIED_TITLE */
 #ifdef WSM
-    WmDrawXmString(DISPLAY, win, renderTable, pcd->clientTitle, clientGC,
+    WmDrawXmString(DISPLAY, win, fontList, pcd->clientTitle, clientGC,
 		   textBox.x, textBox.y, textBox.width, &textBox,
 		   True);
 #else
-    WmDrawXmString(DISPLAY, win, renderTable, pcd->clientTitle, clientGC,
+    WmDrawXmString(DISPLAY, win, fontList, pcd->clientTitle, clientGC,
 		   textBox.x, textBox.y, textBox.width, &textBox);
 #endif
 #endif /* DT_LEFT_JUSTIFIED_TITLE */

@@ -1,31 +1,44 @@
+
+#include <localdef.h>
+
 /* 
- * Motif
- *
- * Copyright (c) 1987-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
+ * @OPENGROUP_COPYRIGHT@
+ * COPYRIGHT NOTICE
+ * Copyright (c) 1989, 1990, 1991, 1992, 1993, 1994 Open Software Foundation, Inc. 
+ * Copyright (c) 1996, 1997, 1998, 1999, 2000 The Open Group
+ * ALL RIGHTS RESERVED (MOTIF). See the file named COPYRIGHT.MOTIF for
+ * the full copyright text.
+ * 
+ * This software is subject to an open license. It may only be
+ * used on, with or for operating systems which are themselves open
+ * source systems. You must contact The Open Group for a license
+ * allowing distribution and sublicensing of this software on, with,
+ * or for operating systems which are not Open Source programs.
+ * 
+ * See http://www.opengroup.org/openmotif/license for full
+ * details of the license agreement. Any use, reproduction, or
+ * distribution of the program constitutes recipient's acceptance of
+ * this agreement.
+ * 
+ * EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, THE PROGRAM IS
+ * PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT LIMITATION, ANY
+ * WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY
+ * OR FITNESS FOR A PARTICULAR PURPOSE
+ * 
+ * EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, NEITHER RECIPIENT
+ * NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OR DISTRIBUTION OF THE PROGRAM OR THE
+ * EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
 */ 
 /* 
  * Motif Release 1.2.4
 */ 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 
 
 #ifdef REV_INFO
@@ -71,6 +84,12 @@ static char rcsid[] = "$XConsortium: WmResParse.c /main/9 1996/11/01 10:17:34 dr
 
 #include <X11/Xlocale.h>
 
+#if defined(__GLIBC__)
+#ifndef _LOCALE_H
+#include <locale.h>
+#endif
+#endif
+
 #ifndef NO_MULTIBYTE
 #include <stdlib.h>
 #endif
@@ -81,11 +100,12 @@ static char rcsid[] = "$XConsortium: WmResParse.c /main/9 1996/11/01 10:17:34 dr
 #else
 #include <Xm/XmP.h>             /* for XmeGetHomeDirName */
 #endif
-#ifdef WSM
-#include <signal.h>
-#endif /* WSM */
 
-#define FIX_1127
+#ifdef USE_LOC_DEF
+#if ( defined(WSM) || defined(MWM_WSM) ) && defined(__GLIBC__) /* >= 2 */
+#include <signal.h>
+#endif
+#endif /* WSM */
 
 /* maximum string lengths */
 
@@ -445,6 +465,13 @@ FunctionTableEntry functionTable[] = {
 			F_DeleteWorkspace,
 			ParseWmFuncNoArg},
 #endif /* WSM */
+#ifdef ADD_PAN
+    {"f.east",	0,
+			CRS_ANY,
+			0,
+			F_East,
+			ParseWmFuncNoArg},
+#endif
     {"f.exec",		0,
 			CRS_ANY,
 			0,
@@ -568,6 +595,13 @@ FunctionTableEntry functionTable[] = {
 			F_Normalize_And_Raise,
 			ParseWmFuncNoArg},
 #endif /* PANELIST */
+#ifdef ADD_PAN
+    {"f.north",		0,
+			CRS_ANY,
+			0,
+			F_North,
+			ParseWmFuncNoArg},
+#endif
 #ifdef WSM
     {"f.occupy_all", F_CONTEXT_ICONBOX|F_CONTEXT_ROOT,
 			CRS_ANY,
@@ -704,24 +738,39 @@ FunctionTableEntry functionTable[] = {
 			F_Set_Context,
 			ParseWmFuncNbrArg},
 #endif /* WSM */
+#ifdef ADD_PAN
+    {"f.south",	0,
+			CRS_ANY,
+			0,
+			F_South,
+			ParseWmFuncNoArg},
+#endif
     {"f.title",		0,
 			CRS_MENU,
 			0,
 			F_Title,
 			ParseWmFuncNoArg},
-#if defined(PANELIST)
+#ifdef PANELIST
     {"f.toggle_frontpanel", 0,
 			CRS_ANY,
 			0,
 			F_Toggle_Front_Panel,
 			ParseWmFuncNoArg},
-
+#endif /* PANELIST */
+#ifdef PANELIST
     {"f.version",       0,
 			CRS_ANY,
 			0,
 			F_Version,
 			ParseWmFuncNoArg},
 #endif /* PANELIST */
+#ifdef ADD_PAN
+    {"f.west",	0,
+			CRS_ANY,
+			0,
+			F_West,
+			ParseWmFuncNoArg},
+#endif
 #ifdef WSM
 
 #ifdef OLD
@@ -2391,9 +2440,16 @@ FILE *FopenConfigFile (void)
   {
 #endif /* PANELIST */
 
+#ifndef USE_234
+#ifdef LIBDIR
+#define MWMRCDIR LIBDIR
+#endif
+#endif
+
 #ifndef MWMRCDIR
 #define MWMRCDIR "/usr/lib/X11"
 #endif
+
     if (LANG != NULL)
     {
 #ifdef WSM
@@ -5315,10 +5371,9 @@ GetNextLine (void)
 	string = line;
 #ifndef NO_MULTIBYTE
 #ifdef FIX_1127
-	chlen = mblen((char *)parseP, MB_CUR_MAX);
-	if(chlen==-1) string = NULL;
+        chlen = mblen((char *)parseP, MB_CUR_MAX);
+        if(chlen==-1) string = NULL;
 #endif
-
 	while ((*parseP != '\0') &&
                ((chlen = mblen ((char *)parseP, MB_CUR_MAX)) > 0) &&
 	       (*parseP != '\n'))
@@ -5334,9 +5389,9 @@ GetNextLine (void)
 	/* copy all but end-of-line and newlines to line buffer */
 	{
 	    *(string++) = *(parseP++);
-    }
+        }
 #endif
-	if (string)
+	if(string)
 	    *string = '\0';
 	if (*parseP == '\n')
 	{

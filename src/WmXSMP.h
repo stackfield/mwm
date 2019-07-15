@@ -1,3 +1,6 @@
+
+#include <localdef.h>
+
 #ifndef _WmXSMP_h
 #define _WmXSMP_h
 

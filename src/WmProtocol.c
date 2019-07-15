@@ -1,31 +1,44 @@
+
+#include <localdef.h>
+
 /* 
- * Motif
- *
- * Copyright (c) 1987-2012, The Open Group. All rights reserved.
- *
- * These libraries and programs are free software; you can
- * redistribute them and/or modify them under the terms of the GNU
- * Lesser General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option)
- * any later version.
- *
- * These libraries and programs are distributed in the hope that
- * they will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE. See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with these librararies and programs; if not, write
- * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301 USA
+ * @OPENGROUP_COPYRIGHT@
+ * COPYRIGHT NOTICE
+ * Copyright (c) 1989, 1990, 1991, 1992, 1993 Open Software Foundation, Inc. 
+ * Copyright (c) 1996, 1997, 1998, 1999, 2000 The Open Group
+ * ALL RIGHTS RESERVED (MOTIF). See the file named COPYRIGHT.MOTIF for
+ * the full copyright text.
+ * 
+ * This software is subject to an open license. It may only be
+ * used on, with or for operating systems which are themselves open
+ * source systems. You must contact The Open Group for a license
+ * allowing distribution and sublicensing of this software on, with,
+ * or for operating systems which are not Open Source programs.
+ * 
+ * See http://www.opengroup.org/openmotif/license for full
+ * details of the license agreement. Any use, reproduction, or
+ * distribution of the program constitutes recipient's acceptance of
+ * this agreement.
+ * 
+ * EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, THE PROGRAM IS
+ * PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT LIMITATION, ANY
+ * WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY
+ * OR FITNESS FOR A PARTICULAR PURPOSE
+ * 
+ * EXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, NEITHER RECIPIENT
+ * NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED
+ * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OR DISTRIBUTION OF THE PROGRAM OR THE
+ * EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGES.
 */ 
 /* 
  * Motif Release 1.2.3
 */ 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
 
 
 #ifdef REV_INFO
@@ -56,7 +69,9 @@ static char rcsid[] = "$TOG: WmProtocol.c /main/8 1997/06/18 17:31:34 samborn $"
 #include "WmEvent.h"
 #endif /* NO_WMQUERY */
 #ifdef PANELIST
+#ifdef USE_DT
 #include "WmPanelP.h"
+#endif
 #endif /* PANELIST */
 
 #if ((!defined(WSM)) || defined(MWM_QATS_PROTOCOL))
@@ -92,6 +107,8 @@ static Boolean WMiConvert           (Widget, Atom, Atom,
 				     XtPointer *, unsigned long *, int *);
 static void    WMiConvertCB         (Widget, XtPointer, XtPointer);
 #endif /* !defined(WSM) || defined(MWM_QATS_PROTOCOL) */
+
+void SetPanPosition (int, int);
 
 /*
  * Global Variables:
@@ -144,9 +161,14 @@ void SetupWmICCC (void)
 	   XA_MOTIF_WM_REMOVE_COMMAND, XA_MOTIF_WM_ENABLE_COMMAND,
 	   XA_MOTIF_WM_DISABLE_COMMAND, XA_MOTIF_WM_RENAME_COMMAND,
 	   XA_MOTIF_WM_INVOKE_COMMAND, XA_MOTIF_WM_REQUEST_COMMAND,
-	   XA_MOTIF_WM_WINDOW_FLAGS, XA_MOTIF_WM_AUTOMATION, 
+	   XA_MOTIF_WM_WINDOW_FLAGS,
+#if defined(ADD_PAN)
+	   XA_MOTIF_WM_PAN, XA_MOTIF_WM_GOTO,
 #endif
-	   XA_COMPOUND_TEXT, NUM_ATOMS };
+	   XA_MOTIF_WM_AUTOMATION, 
+#endif
+	   XA_COMPOUND_TEXT,
+	   NUM_ATOMS };
 
     static char *atom_names[] = {
 #if ((!defined(WSM)) || defined(MWM_QATS_PROTOCOL))
@@ -170,7 +192,11 @@ void SetupWmICCC (void)
 	   _XA_MOTIF_WM_REMOVE_COMMAND, _XA_MOTIF_WM_ENABLE_COMMAND,
 	   _XA_MOTIF_WM_DISABLE_COMMAND, _XA_MOTIF_WM_RENAME_COMMAND,
 	   _XA_MOTIF_WM_INVOKE_COMMAND, _XA_MOTIF_WM_REQUEST_COMMAND,
-	   _XA_MOTIF_WM_WINDOW_FLAGS, _XA_MOTIF_WM_AUTOMATION, 
+	   _XA_MOTIF_WM_WINDOW_FLAGS,
+#if defined(ADD_PAN)
+	   _XA_MOTIF_WM_PAN, _XA_MOTIF_WM_GOTO,
+#endif
+	   _XA_MOTIF_WM_AUTOMATION, 
 #endif
 	   "COMPOUND_TEXT"
     };
@@ -222,7 +248,13 @@ void SetupWmICCC (void)
     wmGD._MOTIF_WM_REQUEST_COMMAND= atoms[XA_MOTIF_WM_REQUEST_COMMAND];
     wmGD._MOTIF_WM_WINDOW_FLAGS	  = atoms[XA_MOTIF_WM_WINDOW_FLAGS];
 
+#if defined(ADD_PAN)
+    wmGD._MOTIF_WM_PAN    = atoms[XA_MOTIF_WM_PAN];
+    wmGD._MOTIF_WM_GOTO	  = atoms[XA_MOTIF_WM_GOTO];
+#endif
+
     wmGD._MOTIF_WM_AUTOMATION	  = atoms[XA_MOTIF_WM_AUTOMATION];
+
 #endif /* !defined(WSM) || defined(MWM_QATS_PROTOCOL) */
 
 
@@ -333,6 +365,9 @@ void SendConfigureNotify (ClientData *pCD)
 {
     XConfigureEvent notifyEvent;
 
+#if 0
+    fprintf(stderr,"WmProtocol SendConfigureNotify\n");
+#endif
 
     /*
      * Send a synthetic ConfigureNotify message:
@@ -343,6 +378,7 @@ void SendConfigureNotify (ClientData *pCD)
     notifyEvent.event = pCD->client;
     notifyEvent.window = pCD->client;
 #ifdef PANELIST
+#ifdef USE_EMB_CLI
     if (pCD->pECD)
     {
 	int rootX, rootY;
@@ -365,6 +401,7 @@ void SendConfigureNotify (ClientData *pCD)
 	notifyEvent.height = pCD->clientHeight;
     }
     else
+#endif /* USE_EMB_CLI */
 #else /* PANELIST */
 #endif /* PANELIST */
     if (pCD->maxConfig)
@@ -1314,7 +1351,7 @@ WMiConvert (
       *targs++ = wmGD._MOTIF_WM_REQUEST_COMMAND;		targetCount++;
       *targs++ = wmGD._MOTIF_WM_WINDOW_FLAGS;			targetCount++;
 
-#ifdef MWM_WSM
+#if defined(MWM_WSM) || defined(ADD_PAN)
       /* virtual screen support */
       *targs++ = wmGD._MOTIF_WM_PAN;				targetCount++;
       *targs++ = wmGD._MOTIF_WM_GOTO;				targetCount++;
@@ -1331,36 +1368,75 @@ WMiConvert (
       found = True;
     }
 
-#ifdef MWM_WSM    
-    /* virtual screen support */
+#if defined(MWM_WSM) || defined(ADD_PAN)
+
+    /* see notes at EOF */
     else if (target == wmGD._MOTIF_WM_PAN)
       {
-	int     dx, dy;
+	int	dx, dy;
+#ifndef ADD_PAN
 	Boolean config;
-
-	dx     = (int) UnpackCARD32(&input);
-	dy     = (int) UnpackCARD32(&input);
-	config = (Boolean) UnpackCARD8(&input);
-
+#else
+	int	config, pannerX, pannerY, pannerWidth, pannerHeight;
+	dx=0;dy=0;config=0;pannerX=0;pannerY=0;pannerWidth=0;pannerHeight=0;
+#endif
+#ifdef ADD_PAN
+	if( ACTIVE_PSD->usePan == False ) return;
+#endif
+	dx     		= (int) UnpackCARD32(&input);
+	dy     		= (int) UnpackCARD32(&input);
+#ifndef ADD_PAN
+	config 		= (Boolean) UnpackCARD8(&input);
+#else
+	config		= (int) UnpackCARD32(&input);
+#endif
+#ifdef ADD_PAN
+	pannerX  	= (int) UnpackCARD32(&input);
+	pannerY  	= (int) UnpackCARD32(&input);
+	pannerWidth     = (int) UnpackCARD32(&input);
+	pannerHeight	= (int) UnpackCARD32(&input);
+#endif
+#ifndef ADD_PAN
 	PanRoot(dx, dy, config);
-
+#endif
+#ifdef ADD_PAN
+	PanRoot(dx, dy, config, pannerX, pannerY, pannerWidth, pannerHeight);
+#endif
 	/*
 	 * Update the root property
 	 */
 
 	SetPanPosition (ACTIVE_PSD->panDx, ACTIVE_PSD->panDy);
+
+        /* only PanRoot should update "center", not here where there is no test
+         * also note the sister WM_GOTO does not update it ? very strange
+         */
 	
 	found = True;
       }
     else if (target == wmGD._MOTIF_WM_GOTO)
       {
-	int  x, y;
+	int  x, y, dx, dy;
 
+#ifdef ADD_PAN
+	if( ACTIVE_PSD->usePan == False ) return;
+#endif
 	x = (int) UnpackCARD32(&input);
 	y = (int) UnpackCARD32(&input);
 
-	PanRoot(x - ACTIVE_PSD->panDx, y - ACTIVE_PSD->panDy, 1);
+#if defined(PAN_DEBUG)
+        /* know of nothing that gets here */
+        fprintf(stderr," # WMiConvert:_MOTIF_WM_GOTO (%d,%d)\n",dx,dy);
+#endif
 
+	dx = ACTIVE_PSD->panDx - x;
+	dy = ACTIVE_PSD->panDy - y;
+
+#ifndef ADD_PAN
+	PanRoot(dx, dy, 1);
+#else
+	PanRoot(dx, dy, 1, 0, 0, 0, 0);
+#endif
 	found = True;
       }
     
@@ -1368,6 +1444,7 @@ WMiConvert (
      * Handle the workspace manager protocol targets...
      */
     
+#if defined(MWM_WSM)
     else if (WSMIsKnownTarget(w, target))
       {
 	/*
@@ -1380,6 +1457,7 @@ WMiConvert (
 			 outputType, output, outputLen, outputFmt);
       }
 #endif /* MWM_WSM */
+#endif /* defined(MWM_WSM) || defined(ADD_PAN)
     
     /*
      *  Handle client-command interface targets.
@@ -1452,8 +1530,10 @@ WMiConvert (
       }
 
     else
+    {
       Warning (((char *)GETMESSAGE(56, 8,
 		"Conversion request made for unknown target type")));
+     }
   }
   
   
@@ -1518,3 +1598,618 @@ WMiConvertCB (
     }
 }
 #endif /* !defined(WSM) || defined(MWM_QATS_PROTOCOL) */
+
+
+#ifdef ADD_PAN
+
+/***************************************
+ *
+ * PanRoot ()
+ * -------
+ *
+ *   Non-Virtual Panning support
+ *   This PanRoot assumes data may be a lossy, also does not send out events.
+ *   simply move all windows wmw wraps, leave all else alone
+ *   it isn't unlike WSM groups and may be compatible.  reason: the top level
+ *   is too complex to make factorial more by a 2nd virt fake root just for pan
+ *     update from 1st: faster, simpler, includes transients
+ *
+ **************************************/
+
+/* #define PAN_DEBUG */
+
+#include <math.h>  /* sqrt for dist formula */
+/* #include "WmManage.h" */
+
+/* arbitrary limits */
+#define PAN_MAX_DELTA		1000000	/* 100k desktop size Xi common ? */
+#define PAN_MAX_ABS		10000000
+#define PAN_MAX_WINS		100000	/* mwm child+transients count limit */
+#define IS_PANNER		(config & 1)
+#define STILL_PANNING_B3	(config & 2)
+#define SET_STILL_PANNING_B3	config |= 2
+#define UNSET_STILL_PANNING_B3	config &= ~2
+#define PAN_B3_EXTEND_RADIUS	400
+/* else XMoved which only 1/2 works.  seems safe and works */
+#define PAN_TRANSIENTS_TOO
+
+static int pan_error=0;
+
+void SetPanPosition (int panDx, int panDy) { ; }
+
+static int PanIgnoreError (Display *dsp, XErrorEvent *event)
+{
+  pan_error = 1;
+  return 0;
+}
+
+void PanRoot(int dx, int dy, int config,
+  int pannerX, int pannerY, int pannerWidth, int pannerHeight)
+{
+  static 	Boolean 	busy = False ;
+  static 	Boolean 	button3held = False ;
+  static 	Window 		* button3Client;
+  Display 	* dpy;
+  Window	root, parent, win, icon_win, * child;
+  XWindowAttributes attribs;
+  WmScreenData	* pSD; 
+  ClientData	* pcd, ** pcd_arr ;
+  ClientListEntry * cle ;
+  unsigned int	childCount, i, j, k;
+  int x, y, width, height, newx, newy;
+  Boolean once,once3, button3,changed;
+  int (*oldHandler)();
+
+  typedef struct _savexy { int x; int y; int w; int h; int bw; } SaveAttr;
+  SaveAttr * attr_arr;
+
+#if defined(PAN_DEBUG)
+  if( busy ) fprintf(stderr," #PanRoot: is BUSY >\n");
+  fprintf(stderr,"# PanRoot: (%d,%d) %d (%d,%d) (%d,%d)\n",
+    dx,dy,config,pannerX,pannerY,pannerWidth,pannerHeight);
+  fflush(stderr);
+#endif
+
+  if( busy ) return;
+  busy=True;
+  changed=False;
+  pan_error=0;
+
+/* clamp a few things */
+
+  if( dx==0 && dy==0 ) 		goto busyreturn;
+  if( ACTIVE_ROOT == 0 )	goto busyreturn;
+  if( DISPLAY == NULL )		goto busyreturn;
+  if( ACTIVE_PSD == NULL )	goto busyreturn;
+
+  pSD = ACTIVE_PSD;
+  pSD->panning = 0;
+  if(pSD->usePan == False) goto busyreturn;
+  dpy = DISPLAY;
+
+  if( dx 		>  PAN_MAX_DELTA ) 		goto busyreturn;
+  if( dy 		>  PAN_MAX_DELTA ) 		goto busyreturn;
+  if( dx 		< -PAN_MAX_DELTA )		goto busyreturn;
+  if( dy 		< -PAN_MAX_DELTA )		goto busyreturn;
+  /* no panDx check is always (0,0) see note below */
+
+/* button3 is assumed by presence of non-zero values
+ * if STILL_PANNING_B3 then we want last window panned to continue
+ * (otherwise windows sliding past each other might exchage as cursor drag)
+ */
+button3 = (pannerX==0 && pannerY==0 && pannerWidth == 0 && pannerHeight == 0)
+        ? False : True ;
+if( button3 )
+{
+  if( pannerWidth	<  2 )			goto busyreturn;
+  if( pannerHeight	<  2 )			goto busyreturn;
+  if( pannerWidth	>  PAN_MAX_ABS )	goto busyreturn;
+  if( pannerHeight	>  PAN_MAX_ABS )	goto busyreturn;
+  if( pannerX		>  PAN_MAX_ABS )	goto busyreturn;
+  if( pannerY		>  PAN_MAX_ABS )	goto busyreturn;
+  if( pannerX		< -PAN_MAX_ABS )	goto busyreturn;
+  if( pannerY		< -PAN_MAX_ABS )	goto busyreturn;
+  button3held = STILL_PANNING_B3 ;
+}
+else
+{
+  button3held=False;
+}
+  if( ! button3held )
+    button3Client = NULL;
+
+  cle=pSD->clientList;
+  if( cle == NULL ) 				goto busyreturn;
+
+  /* even if there are no windows to move the virtual center updates */
+  width=ScreenOfDisplay(dpy, pSD->screen)->width;
+  height=ScreenOfDisplay(dpy, pSD->screen)->height;
+
+  child=NULL; pcd_arr=NULL; attr_arr=NULL;
+  childCount=0;
+
+  /*
+   * We need to install an error handler since the window-tree may
+   * become invalid while where still processing the list.
+   *   (or XtMalloc fail handling)
+   */
+  oldHandler = XSetErrorHandler(PanIgnoreError);
+
+  /* find (all) current win to possibly cull list above, a double check */
+  if (! XQueryTree(dpy, pSD->rootWindow, &root, &parent, &child, &childCount))
+    goto freereturn;
+  if( !childCount )
+    goto freereturn;
+
+#if 1
+#define RADIX_BITS_1( pan_rad_val, pan_rad_bitpos) (pan_rad_val & (1<<pan_rad_bitpos))
+/* from sort_int.c, a collection of unsigned int sorts
+   this sort is quick in the "mid range" of thousands yet easy to use
+*/
+void
+radix_exchange_sort ( unsigned int * a, int L, int R, int b )
+{
+        unsigned int t;
+        int i, j;
+        if ( R>L && b >=0 )
+        {
+                i = L; j = R;
+                while ( j != i )
+                {
+                while ( RADIX_BITS_1 ( a[i], b ) == 0 && i < j ) ++i;
+                while ( RADIX_BITS_1 ( a[j], b ) != 0 && j > i ) --j;
+                t = a[i]; a[i] = a[j]; a[j] = t;
+                }
+                if ( RADIX_BITS_1 ( a[R], b ) == 0 ) j++;
+                /* if(j) // without this L,R i,j must be int not unsigned */
+                radix_exchange_sort ( a, L, j-1, b-1 );
+                radix_exchange_sort ( a, j, R, b-1 );
+        }
+}
+if( childCount >= (unsigned) (((unsigned) 1 << 31)-(unsigned) 2) )
+{
+  fprintf(stderr,"panner: too many childs %u\n", childCount);
+  goto freereturn;
+}
+radix_exchange_sort (child, 0, childCount-1, sizeof(Window *)*8 - 1);
+/* b is, ie, ptr size 32 bits -1 */
+#undef RADIX_BITS_1
+#endif
+
+/* typical linear binary search */
+#define pan_lbsearch(k,rec,a,L,R) { \
+  unsigned int l,r;l=L;r=R; \
+  while(l<r) { \
+    rec=(l+r)>>1; \
+    if(k>a[rec]) l=rec+1; \
+    else r= rec; } \
+  rec=l; if(rec>R||a[r]!=k) rec=-1; }
+
+  pcd_arr = (ClientData **)
+    XtMalloc(sizeof(ClientData *) * childCount);
+  if( pcd_arr == NULL || pan_error )
+  {
+    fprintf(stderr,"# PanRoot : wmProtocol.c:PanRoot , out of memory");
+    goto freereturn;
+  }
+  memset(pcd_arr,0,sizeof(ClientData *) * childCount);
+  /* for(i=0; i < childCount; ++i) pcd_arr[i] = NULL; */
+  attr_arr = (SaveAttr *) XtMalloc(sizeof(SaveAttr) * childCount);
+  if( attr_arr == NULL || pan_error )
+  {
+    fprintf(stderr,"# PanRoot : wmProtocol.c:PanRoot , out of memory");
+    goto freereturn;
+  }
+
+  /*
+   * Find mwm win list and mark pinned names (sticky, not panned)
+   * if pcd win is found in child[], can later use mwm move not XMove
+   * (if pcd win isn't in child[], skip it since X doesnt know about it)
+   */
+  /* the cle are a simple list in pSD (no subtree) */
+  k=0;
+  once3=False;
+  for( i=0 ; cle && i < childCount && k++ < PAN_MAX_WINS ; ++i )
+  {
+    if (once3)
+    {
+      cle=cle->nextSibling;
+      if( cle == pSD->lastClient) break;
+      if( cle == NULL) break;
+    }
+    once3=True;
+    pcd=cle->pCD;
+    if( pcd == NULL) continue;
+    if( pcd->clientFrameWin == 0 ) continue;
+    once=False;
+    /* if panner minimized is in iconbox, cannot pan to iconbox
+       (could open new panner or use keys, is just a policy) */
+    if( pcd->clientName)
+    if( strcmp(pcd->clientName,"panner") == 0 ||
+        strcmp(pcd->clientName,"iconbox") == 0 ||
+        strcmp(pcd->clientName,"panel") == 0 )
+      once=True;
+    /* note: child[j] == cle->pCD->clientFrameWin */
+    win = pcd->clientFrameWin;
+    pan_lbsearch(win,j,child,0,childCount-1);
+    if( j == -1 ) continue ;
+#if defined(PAN_DEBUG)
+    fprintf(stderr,"%s M %p X %p cle %p\n",pcd->clientName, pcd, win,cle);
+#endif
+    if( once )
+    {
+      pcd_arr[j] = (ClientData *) 1;
+    }
+    else
+    {
+    /* keep first of duplicate pcd, skip rest (see note 1) */
+      if( pcd_arr[j] == NULL )
+          pcd_arr[j] = pcd;
+    }
+    /* see note 1 about how mwm does icon v. window: not well, same pcd */
+    win = ICON_FRAME_WIN(pcd);
+    if( win )
+    {
+      /* iconFrameWindow in both app/icon pcd are same, dont want either */
+      pan_lbsearch(win,j,child,0,childCount-1);
+      if( j != -1 )
+          pcd_arr[j] = (ClientData *) 1;
+    }
+#ifdef PAN_TRANSIENTS_TOO
+    /* tranients are kept as a binary tree list */
+    /* if win found in child[j] put transient pcd in pcd_arr[j] */
+    {
+      Boolean once2;
+      once2 = False;
+      void pan_walk (ClientData *pcdNext)
+      {
+        ClientData *pcdTmp;
+        int j;
+        if (++k > PAN_MAX_WINS)
+        {
+          if ( !once2 )
+            fprintf(stderr,"# PanRoot : infinite recusion transient tree\n");
+          once2 = True;
+          return;
+        }
+        pcdTmp = pcdNext;
+#if defined(PAN_DEBUG)
+        fprintf(stderr,"\tT %s M %p X %p\n",
+          pcdTmp->clientName, pcdTmp, pcdTmp->clientFrameWin);
+#endif
+        pan_lbsearch(pcdTmp->clientFrameWin,j,child,0,childCount-1);
+        if( j == -1 ) return;
+        if( once )
+        {
+          pcd_arr[j] = (ClientData *) 1;
+        }
+        else
+        {
+          if( pcd_arr[j] == NULL )
+            pcd_arr[j] = pcdTmp;
+        }
+        while (pcdTmp->transientChildren)
+        {
+          pan_walk (pcdTmp->transientChildren);
+          pcdTmp = pcdTmp->transientChildren;
+        }
+        pcdTmp = pcdNext;
+        while (pcdTmp->transientSiblings)
+        {
+          pan_walk (pcdTmp->transientSiblings);
+          pcdTmp = pcdTmp->transientSiblings;
+        }
+      }
+      pan_walk (pcd);
+    }
+#endif
+  }
+  pcd=NULL;
+
+#undef pan_lbsearch
+
+/* if button 3 (move 1 only) and not continuing, find nearest window to grab */
+if( button3 && ! STILL_PANNING_B3 )
+{
+  double pxmul, pymul, pxpos, pypos, wcenterx, wcentery,
+    dist, min_dist;
+  button3Client = NULL;
+  /* convert panXY to screen coord pxypos */
+  pxmul=DisplayWidth(dpy, pSD->screen)/pannerWidth;
+  pymul=DisplayHeight(dpy, pSD->screen)/pannerHeight;
+  pxpos=(float)pannerX*pxmul;
+  pypos=(float)pannerY*pymul;
+#if defined(PAN_DEBUG)
+  fprintf(stderr,"\tdwh=(%d,%d) pxymul=(%f,%f) pxypos=(%f,%f)\n",
+    DisplayWidth(dpy, pSD->screen),DisplayHeight(dpy, pSD->screen),
+    pxmul,pymul,pxpos,pypos);
+#endif
+  min_dist=PAN_MAX_ABS+1;
+  dist=0;
+
+  /* find closet window to panner adjusted xy */
+  for( i=0; i < childCount; ++i)
+  {
+    if( pcd_arr[i] == (ClientData *) 1 ) continue;
+    if ( ! XGetWindowAttributes (dpy, child[i], &attribs) ) continue;
+    if ( attribs.override_redirect == True ) continue ;
+    /* if ( attribs.map_state != IsViewable ) continue; excludes icons */
+    /* is dist too far to even consider ? */
+    if (pxpos + PAN_B3_EXTEND_RADIUS < attribs.x ||
+        pxpos - PAN_B3_EXTEND_RADIUS > attribs.x+attribs.width ||
+        pypos + PAN_B3_EXTEND_RADIUS < attribs.y ||
+        pypos - PAN_B3_EXTEND_RADIUS > attribs.y+attribs.height)
+      continue;
+    /* which of ones in box is closest ? */
+    wcenterx=(float)attribs.x+(float)attribs.width/(float)2;
+    wcentery=(float)attribs.y+(float)attribs.height/(float)2;
+    dist = sqrt(pow((wcenterx-pxpos),2) + pow((wcentery-pypos),2));
+#if defined(PAN_DEBUG)
+    fprintf(stderr,"<dist %p = %f> \n",child[i],dist);
+#endif
+    if( dist < min_dist )
+    {
+      min_dist = dist;
+      button3Client = (Window *) child[i];
+    }
+  }
+  if( button3Client == NULL || min_dist > PAN_MAX_ABS )
+    goto freereturn;
+  else
+    SET_STILL_PANNING_B3;
+
+} /* button3 */
+
+  /* move windows */
+
+/* #define PAN_TIME */
+#ifdef PAN_TIME
+#include <time.h>
+  clock_t ct1,ct2;
+  ct1 = clock();
+#endif
+
+  for( i=0; i < childCount; ++i)
+  {
+    if( pcd_arr[i] == (ClientData *) 1 )
+      continue;
+    if( button3 && STILL_PANNING_B3 && (Window *) button3Client != (Window *) child[i] )
+    {
+      pcd_arr[i] = (ClientData *) 1 ;
+      continue;
+    }
+    if ( ! XGetWindowAttributes (dpy, child[i], &attribs) )
+    {
+      pcd_arr[i] = (ClientData *) 1 ;
+      continue;
+    }
+    if ( attribs.override_redirect == True )
+    {
+      pcd_arr[i] = (ClientData *) 1 ;
+      continue;
+    }
+    /* this -switcheroo may be a panner(1) specific need */
+    if( button3 )
+    {
+      dx= -dx;
+      dy= -dy;
+    }
+    newx=attribs.x+dx;
+    newy=attribs.y+dy;
+
+    pcd = pcd_arr[i];
+
+    /* prefer the mwm way or there will be glitches until next manual move */
+    if( pcd && ! pSD->panUseX )
+    {
+      /* see note 2 on why icon moves where window does */
+      win = pcd->clientFrameWin;
+      icon_win = ICON_FRAME_WIN(pcd);
+      if( win )
+      {
+        /* W not incl border dont try to update. True "is client requested" */
+        pSD->panning = 1;
+        ProcessNewConfiguration (pcd, newx, newy,
+                                 pcd->clientWidth, pcd->clientHeight, True);
+        pSD->panning = 0;
+        changed=True;
+        /* tell the below XSendEvent is already done */
+        pcd_arr[i] == (ClientData *) 1;
+#if defined(PAN_DEBUG)
+        fprintf(stderr,"# Mwm client %d : %p %s\n",i,child[i],pcd->clientName);
+#endif
+      }
+      if( icon_win && ! (pcd->pSD->useIconBox && P_ICON_BOX(pcd)) )
+      {
+        ICON_X(pcd) = newx;
+        ICON_Y(pcd) = newy;
+        XMoveWindow(DISPLAY, icon_win, newx, newy);
+        if ((ICON_DECORATION(pcd) & ICON_ACTIVE_LABEL_PART) &&
+            (wmGD.keyboardFocus == pcd))
+        {
+          MoveActiveIconText(pcd);
+        }
+#if defined(PAN_DEBUG)
+        fprintf(stderr,"# Mwm icon %d : %p %s\n",i,child[i], pcd->clientName);
+#endif
+      }
+    }
+    else
+    /* XMove all batch then XSendEvent batch to avoid any extra fuss */
+    if ( ! pSD->panUseMwm )
+    {
+      /* hopefully trimmed but proper ProcessNewConfiguration */
+      if( pcd && pSD->panUseX )
+      {
+        pcd->clientX += dx; /* dont try to calc attribs.x - border, hard */
+        pcd->clientY += dy;
+        /* pcd->frameInfo.x += dx;
+         * pcd->frameInfo.y += dy; */
+        x = pcd->clientX - pcd->clientOffset.x;
+        y = pcd->clientY - pcd->clientOffset.y;
+        XMoveWindow (dpy, pcd->clientFrameWin, x, y);
+        changed=True;
+        icon_win = ICON_FRAME_WIN(pcd);
+        if( icon_win && ! (pcd->pSD->useIconBox && P_ICON_BOX(pcd)) )
+        {
+          /* not += dx see notes */
+          ICON_X(pcd) = x;
+          ICON_Y(pcd) = y;
+          XMoveWindow (dpy, icon_win, x, y);
+          if ((ICON_DECORATION(pcd) & ICON_ACTIVE_LABEL_PART) &&
+              (wmGD.keyboardFocus == pcd))
+          {
+            MoveActiveIconText(pcd);
+          }
+        }
+        SetFrameInfo (pcd);
+      }
+      else
+      {
+        attr_arr[i].w=attribs.width;
+        attr_arr[i].h=attribs.height;
+        attr_arr[i].x=newx;
+        attr_arr[i].y=newy;
+        attr_arr[i].bw=attribs.border_width;
+        XMoveWindow (dpy, child[i], newx, newy);
+      }
+#if defined(PAN_DEBUG)
+      fprintf(stderr,"# XMove client %d : %p\n",i, child[i]);
+#endif
+    }
+  }
+
+  /* send out synthetic notify to apps that they were moved  */
+  if ( ! pSD->panUseMwm )
+  {
+  XConfigureEvent notifyEvent;
+  memset(&notifyEvent,0,sizeof(notifyEvent));
+  for( i=0; i < childCount; ++i)
+  {
+    if ( pcd_arr[i] == (ClientData *) 1 )
+      continue;
+    if( pcd_arr[i] && pSD->panUseX )
+    {
+      SendConfigureNotify (pcd_arr[i]); /* send to pcd->client */
+      continue;
+    }
+    /* ConfigureNotify event struct XConfigureEvent */
+    notifyEvent.type = ConfigureNotify;
+    notifyEvent.display = DISPLAY;
+    notifyEvent.serial = True;
+    notifyEvent.event = child[i];
+    notifyEvent.window = child[i];
+    notifyEvent.x = attr_arr[i].x;
+    notifyEvent.y = attr_arr[i].y;
+    notifyEvent.width = attr_arr[i].w;
+    notifyEvent.height = attr_arr[i].h;
+    notifyEvent.border_width = attr_arr[i].bw;
+    notifyEvent.above = None;
+    notifyEvent.override_redirect = False;
+    XSendEvent (DISPLAY, child[i], False, StructureNotifyMask,
+                (XEvent *)&notifyEvent);
+  }
+  }
+
+  if( changed == True )
+  {
+    /* we're always on (0,0) so set 0,0.  note neither pan or mwm use panDx */
+    pSD->panDx = 0;
+    pSD->panDy = 0;
+#ifdef NEVER
+      /* never seen undrawn frame parts.  maybe notifyEvent or PNC did it
+       * this polls X so avoid if possible */
+      /* cleanup exposed frame parts */
+      PullExposureEvents ();
+#endif
+#ifdef PAN_TIME
+    ct2 = clock();
+    fprintf(stderr,"\n%u useX=%d useMwm=%d\n",ct2-ct1,
+      pSD->panUseX,pSD->panUseMwm);
+#endif
+  }
+
+  /* nop; */
+freereturn:
+  /* nop; */
+
+  XSetErrorHandler(oldHandler);
+  if(pcd_arr != NULL)
+    XtFree((char *) pcd_arr);
+  pcd_arr=NULL;
+  if (child != NULL)
+    XFree((char*) child);
+  child = NULL;
+  if (attr_arr != NULL)
+    XFree((char*) attr_arr);
+  attr_arr = NULL;
+
+  /* nop; */
+busyreturn:
+  /* nop; */
+
+  busy=False;
+
+}
+
+#if defined(PAN_NOTES)
+
+  /* send out "i panned it" atom XA_WM_PANNED ?
+   * yet nother issue is panner only updates after pan change: not after
+   * window moves.  and it's (intrusive) if mwm must keep finding panner
+   * and giving it messasges, also bad if panner is always jammed waiting for
+   * messages that were lost ... time time.  ask server win are where they are
+   */
+/* note 1
+ *
+ * if its inside iconbox: is checked later and not moved
+ * if icon on desktop may have 2xcle but only one in cle[]
+ *   the two cle may have diff .type but that's not helpful
+ * overwrite pcd_arr[j] they are the same as far as we can see or use
+ *
+ * Why: iconbox and icon on desktop two cle: all the same pcd if there are two
+ * there may be only one if icon is on desktop, or if never 1st minimized
+ *   (two diff cle having same ClientData pointer: all same data)
+ * Answer becomes: remove icon address from child[i], dont save cle just pcd
+ */
+/* note 2
+ *
+ * Mwm assumes window can't move if iconized: so move the desktop of icons
+ * mean no windows got moved.  But worse: mwm uses same pcd for both
+ * so if one tries to move the window: mwm moves the icon.  To undo that
+ * mwm would have to be edited to use (two pcd) remove the assumption both
+ * cannot move or even both seen (the ties between should be very loose).
+ *
+ * !! note XMove(dpy,icon_win,...) does Not move icon - it's for menu post
+ *
+ * ie, this would make new policy as icon centric but NOT get "separation"
+ *    if ((pcd->clientState == MINIMIZED_STATE) &&
+ *        (!(pcd->pSD->useIconBox && P_ICON_BOX(pcd))) && icon_win)
+ *    ...
+ *      newx=ICON_X(pcd)+dx; newy=ICON_Y(pcd)+dy;
+ *      ICON_X(pcd) = newx; ICON_Y(pcd) = newy; ...
+ */
+#endif /* PAN_NOTES */
+#if 0
+/* void insertion_sort ( SORT_TYPE *a, unsigned int L, unsigned int R ) */
+/* if you had any problems implementing radix bits ... paste this in */
+{
+        unsigned int i, j, tmp, L, R;
+        L = 0;
+        R = childCount - 1 ;
+        for ( i = L+1; i <= R; ++i )
+        {
+                tmp = child[i];
+                j = i;
+                while ( child[j - 1] > tmp )
+                {
+                        child[j] = child[j - 1];
+                        --j;
+                        if ( j==L ) break ;
+                }
+                child[j] = tmp;
+        }
+}
+#endif
+#endif /* ADD_PAN */
+
