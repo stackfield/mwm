@@ -1235,7 +1235,7 @@ void DrawWindowTitle (ClientData *pcd, Boolean eraseFirst)
     unsigned long decoration = pcd->decor;
     XRectangle textBox;
     Window win;
-    XmFontList  fontList;
+    XmRenderTable  renderTable;
 
     /* make sure there is a title bar first */
     if (!(decoration & MWM_DECOR_TITLE))
@@ -1259,7 +1259,7 @@ void DrawWindowTitle (ClientData *pcd, Boolean eraseFirst)
 	textBox.y -= (short) pcd->frameInfo.upperBorderWidth;
 
 	win = pcd->clientTitleWin;
-	fontList = CLIENT_TITLE_APPEARANCE(pcd).fontList;
+	renderTable = CLIENT_TITLE_APPEARANCE(pcd).renderTable;
     }
     else 
     {
@@ -1274,7 +1274,7 @@ void DrawWindowTitle (ClientData *pcd, Boolean eraseFirst)
 	/* get the area that the text must fit in */
 	GetTextBox (pcd, &textBox);
 	win = pcd->clientFrameWin;
-	fontList = CLIENT_APPEARANCE(pcd).fontList;
+	renderTable = CLIENT_APPEARANCE(pcd).renderTable;
     }
 
     if (eraseFirst)
@@ -1285,16 +1285,16 @@ void DrawWindowTitle (ClientData *pcd, Boolean eraseFirst)
     }
 
 #ifdef  DT_LEFT_JUSTIFIED_TITLE
-    WmDrawXmString(DISPLAY, win, fontList, pcd->clientTitle, clientGC,
+    WmDrawXmString(DISPLAY, win, renderTable, pcd->clientTitle, clientGC,
 		   textBox.x, textBox.y, textBox.width, &textBox,
 		   ((wmGD.frameStyle == WmSLAB) ? False : True));
 #else /* DT_LEFT_JUSTIFIED_TITLE */
 #ifdef WSM
-    WmDrawXmString(DISPLAY, win, fontList, pcd->clientTitle, clientGC,
+    WmDrawXmString(DISPLAY, win, renderTable, pcd->clientTitle, clientGC,
 		   textBox.x, textBox.y, textBox.width, &textBox,
 		   True);
 #else
-    WmDrawXmString(DISPLAY, win, fontList, pcd->clientTitle, clientGC,
+    WmDrawXmString(DISPLAY, win, renderTable, pcd->clientTitle, clientGC,
 		   textBox.x, textBox.y, textBox.width, &textBox);
 #endif
 #endif /* DT_LEFT_JUSTIFIED_TITLE */

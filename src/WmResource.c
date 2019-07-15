@@ -147,7 +147,7 @@ int DefaultWsColorSetId (WmWorkspaceData *pWS);
 #endif /* WSM */
 void _WmGetDynamicDefault (Widget widget, unsigned char type, String defaultColor, Pixel newBackground, XrmValue *value);
 Boolean SimilarAppearanceData (AppearanceData *pAD1, AppearanceData *pAD2);
-
+void DefaultFont (Widget w, int offset, XrmValue *value);
 
 
 /*
@@ -2334,6 +2334,17 @@ XtResource wmClientResourcesM[] =
 XtResource wmAppearanceResources[] =
 {
 
+
+    {
+        XmNrenderTable,
+        XmCRenderTable,
+        XmRRenderTable,
+        sizeof(XmRenderTable),
+        XtOffsetOf (AppearanceData, renderTable),
+        XtRCallProc,
+        (XtPointer) DefaultFont
+    },
+    
     {
 	XmNfontList,
 	XmCFontList,
@@ -4486,6 +4497,7 @@ void
 MakeAppearanceResources (WmScreenData *pSD, AppearanceData *pAData, Boolean makeActiveResources)
 {
     Pixel foreground;
+    XmString xmstring;
 
     /*
      * Extract a font from the font list.
@@ -4506,7 +4518,11 @@ MakeAppearanceResources (WmScreenData *pSD, AppearanceData *pAData, Boolean make
         + WM_TITLE_BAR_PADDING;
 #endif
 
-
+    xmstring = XmStringCreateLocalized("TEST STRING");
+    pAData->titleHeight = (int) XmStringHeight(pAData->renderTable,xmstring)
+                          + WM_TITLE_BAR_PADDING;
+    XmStringFree(xmstring);
+    
     /*
      * Make standard (inactive) appearance resources.
      */
@@ -6605,3 +6621,20 @@ Monochrome (Screen *screen)
 #ifdef WSM
 /****************************   eof    ***************************/
 #endif /* WSM */
+
+void
+DefaultFont (
+        Widget w,
+        int offset,
+        XrmValue *value)
+{
+ static XmRenderTable  f1;
+ 
+ /* Find the default render table associated with the default
+    render table type. */
+ f1 = XmeGetDefaultRenderTable (w,
+				XmLABEL_RENDER_TABLE);
+ 
+   value->addr = (XtPointer)&f1;
+   value->size = sizeof(f1);
+}
