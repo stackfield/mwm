@@ -23,7 +23,8 @@ AC_FUNC_FORK
 AC_CHECK_FUNCS([bzero gettimeofday mblen memmove memset putenv setlocale strchr strncasecmp strpbrk strrchr strstr])
 
 AC_CONFIG_FILES([Makefile
-                 src/Makefile])
+                 src/Makefile
+                 panner/Makefile])
 AC_PROG_RANLIB
 
 AC_CHECK_HEADERS([X11/Xlib.h],,AC_MSG_ERROR([X11 Header not found]))
