@@ -18,7 +18,7 @@ mwm_CFLAGS  = -DLARGECURSORS -DR2_COMPAT -DUNMAP_ON_RESTART \
                -DCDE_CONFIGURATION_TOP=\"@CDE_CONFIGURATION_TOP@\" \
                -DBITMAPDIR=\"@INCDIR@/bitmaps\" \
                -DMWMRCDIR=\"$(datadir)/mwm\" \
-               -DNO_OL_COMPAT
+               -DNO_OL_COMPAT -I../include
 
 rcdir = $(datadir)/mwm
 dist_rc_DATA = system.mwmrc
