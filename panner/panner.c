@@ -307,6 +307,7 @@ static XEvent time_event;
 /* defauls are for sluggish update for sake of bandwidth defaults
  * the methods are more hoggish the higher the freq
  */
+static Boolean edgestart_when_startup = False;
 #endif
 
 /* ---  Not an ADD_PAN related --- */
@@ -359,7 +360,7 @@ main (int argc, char **argv)
     if (strcmp (argv[i], "--help") == 0)
     {
       printf
-        ("panner  [--help --version --x-only --VERFIED --color-fail --screen-width= --edge-freq= --edge-update= --edge-slide= --b3_upd_freq=] --pan-mult= --b3-quirk...\n");
+        ("panner  [--help --version --x-only --edge-start-when-startup --VERFIED --color-fail --screen-width= --edge-freq= --edge-update= --edge-slide= --b3_upd_freq=] --pan-mult= --b3-quirk...\n");
       return 0;
     };
     if (strcmp (argv[i], "--version") == 0)
@@ -369,6 +370,8 @@ main (int argc, char **argv)
     };
     if (strcmp (argv[i], "--x-only") == 0)
       x_only = True;
+    if (strcmp (argv[i], "--edge-start-when-startup") == 0)
+      edgestart_when_startup = True;
     if (strcmp (argv[i], "--color-fail") == 0)
       color_fail = 1;
     if (strncmp (argv[i], "--screen-width=", 15) == 0)
@@ -475,6 +478,12 @@ edge_update, edge_freq, edge_slide, edge_speed,pan_mult,edge_mult);
 
   memset (&time_event, 0, sizeof (time_event));
 
+#ifdef ADD_PAN
+  if (edgestart_when_startup)
+  {
+    DoStartEdge(pInfoList);
+  }
+#endif
   /* XtAppMainLoop (app); */
 
 #ifdef ADD_PAN
