@@ -481,7 +481,7 @@ edge_update, edge_freq, edge_slide, edge_speed,pan_mult,edge_mult);
 #ifdef ADD_PAN
   if (edgestart_when_startup)
   {
-    DoStartEdge(pInfoList);
+    DoStartEdge(pInfoList[LOCAL].shell);
   }
 #endif
   /* XtAppMainLoop (app); */
