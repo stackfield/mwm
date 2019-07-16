@@ -268,6 +268,11 @@ static void ShowPinStateWarning ();
 static void HandleInitialExpose (Widget, XtPointer, XEvent *, Boolean *);
 static Time GetTimestamp (Display * dsp);
 
+#ifdef ADD_PAN
+static void DoStartEdge (XtPointer);
+static void DoStopEdge (XtPointer);
+#endif
+
 /* ---   ADD_PAN   --- */
 
 #ifdef ADD_PAN
@@ -2076,17 +2081,12 @@ MenuCB (Widget w, XtPointer clientData, XtPointer callData)
     DoNumEdge ();
     break;
   case EDGE_START:
-    if (!panedge) /* && DPY_ACT != NULL */
-    {
-      panedge = True;
-      interval_id = XtAppAddTimeOut (app, edge_freq, timeoutCB, clientData);
-      /* XSelectInput(DPY_ACT,DefaultRootWindow(DPY_ACT),PointerMotionMask); */
-    }
+    DoStartEdge (clientData);
     break;
   case EDGE_STOP:
     /* if(panedge)
      *   XSelectInput(DPY_ACT,DefaultRootWindow(DPY_ACT),NoEventMask); */
-    panedge = False;
+    DoStopEdge (clientData);
     break;
 #endif
   }
@@ -2342,6 +2342,31 @@ HandleInitialExpose (Widget w,
   CheckPinnedState ();
 #endif
 }
+
+/*----------------------------------------------------------------*
+ |                      DoStart/StopEdge                          |
+ *----------------------------------------------------------------*/
+
+#ifdef ADD_PAN
+static void
+DoStartEdge (XtPointer clientData)
+{
+  if (!panedge) /* && DPY_ACT != NULL */
+  {
+    panedge = True;
+    interval_id = XtAppAddTimeOut (app, edge_freq, timeoutCB, clientData);
+    /* XSelectInput(DPY_ACT,DefaultRootWindow(DPY_ACT),PointerMotionMask); */
+  }
+}
+
+static void
+DoStopEdge (XtPointer clientData)
+{
+  /* if(panedge)
+   *   XSelectInput(DPY_ACT,DefaultRootWindow(DPY_ACT),NoEventMask); */
+  panedge = False;
+}
+#endif
 
 #ifdef ADD_PAN
   /* NOTES */
